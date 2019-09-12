@@ -4,13 +4,13 @@ import cv2
 import time
 import tensorflow as tf
 import numpy as np
-from model import model
+from model import model, model_simple
 import cv2
 import random
 import csv
 
 training_dir = "./train_images/"
-batch_Size = 32
+batch_Size = 4 
 width = 1600 
 height = 256
 training_images = [f for f in listdir(training_dir) if isfile(join(training_dir, f))]
@@ -36,6 +36,7 @@ def convert_training_points(training_points):
             for i in range(0, duration-1):
                 all_points.append(location + i)
         converted_training_points[image_path] = all_points
+    print("converted training points")
     return converted_training_points
 
 training_points = get_training_points()
@@ -49,15 +50,19 @@ def train(batch_Size, width, height):
         rawImage = cv2.imread(training_images[randImage], 1)
         rawImageArray = np.asarray( rawImage, dtype="float64")
         groundTruthArray = np.zeros([height * width, 2])
+        num = 0
         for point in converted_training_points[training_images[randImage]]:
-            groundTruthArray[point][1] = 1 
+            groundTruthArray[point][1] = 1
         for i in range(0, len(groundTruthArray)):
             if groundTruthArray[i][0] == 0 and groundTruthArray[i][1] == 0:
                 groundTruthArray[i][0] = 1
+                num += 1 
         
         a[it] = rawImageArray
         b[it] = groundTruthArray
+        print(num)
 
+    np.set_printoptions(threshold=np.inf)
     runTrainingBatch(a, b)
     a = np.zeros((batch_Size, height, width, 3),dtype = "float64")
     b = np.zeros((batch_Size, height*width, 2),dtype = "float64")
@@ -73,7 +78,7 @@ def runTrainingBatch(a, b):
 x_image = tf.placeholder(tf.float32, shape=[batch_Size, height, width, 3])
 y_ = tf.placeholder(tf.float32, shape=[None, None, 2])
 
-modelResult = model(x_image) #sets modelResults to the final result of the model 
+modelResult = model_simple(x_image) #sets modelResults to the final result of the model 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=modelResult, labels=y_))
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)

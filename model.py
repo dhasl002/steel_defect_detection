@@ -10,6 +10,20 @@ def weight_variable(shape):
 def max_pool_2x2(x):
 	return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
 
+def model_simple(x_image):
+    W_conv1 = weight_variable([3, 3, 3, 64])
+    h_conv1 = conv2d(x_image, W_conv1)
+    norm_1 = tf.contrib.layers.batch_norm(h_conv1)
+    relu_1 = tf.nn.relu(norm_1)
+
+    lastWt = weight_variable([1, 1, 64, 2])
+    lastConv = conv2d(relu_1, lastWt)
+    print(lastConv)
+    final_conv = tf.reshape(lastConv, [-1, 2])
+    print(final_conv)
+    return final_conv
+
+
 def model(x_image):
 	with tf.name_scope("Layer1_analysis"):
 		W_conv1 = weight_variable([3, 3, 3, 64])
@@ -138,4 +152,5 @@ def model(x_image):
 	lastConv = conv2d(relu_18, lastWt)
   
 	final_conv = tf.reshape(lastConv, [-1, 2])
+	print(final_conv)
 	return final_conv
